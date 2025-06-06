@@ -164,7 +164,13 @@ object hof{
 
     def map[B](f: T => B): Option[B] = flatMap(v => Option(f(v)))
 
-    def flatMap[B](f: T => Option[B]): Option[B] = ???
+    def map[B](f: T => B): Option[B] = flatMap(t => Option(f(t)))
+
+    def flatMap[B](f: T => Option[B]): Option[B] = this match {
+      case Some(v) => f(v)
+      case None => None
+    }
+
   }
 
   case class Some[T](v: T) extends Option[T]
@@ -188,12 +194,16 @@ object hof{
    *
    * Реализовать метод printIfAny, который будет печатать значение, если оно есть
    */
-
+	def printIfAny(): Unit = this match {
+		case Some(x) => println(x)
+		case None => ()
+	}
 
   /**
    *
    * Реализовать метод zip, который будет создавать Option от пары значений из 2-х Option
    */
+	def zip[B](second: Option[B]): Option[(A, B)] = this.flatMap{x => second.map( y => (x,y))}
 
 
   /**
@@ -201,7 +211,11 @@ object hof{
    * Реализовать метод filter, который будет возвращать не пустой Option
    * в случае если исходный не пуст и предикат от значения = true
    */
+	def filter(predicate: A => Boolean): Option[A] = this match{
 
+	case Some(x) =>  if (predicate(x)) Some(x) else None
+	case None => None
+	}
  }
 
  object list {
@@ -218,7 +232,7 @@ object hof{
     sealed trait List[+T] {
 
      // prepend
-     def ::[TT >: T](elem: TT): List[TT] = ???
+     def ::[TT >: T](elem: TT): List[TT] =  new ::(elem, this)
    }
     case class ::[T](elem: T, tail: List[T]) extends List[T]
     case object Nil extends List[Nothing]
@@ -227,6 +241,16 @@ object hof{
      def apply[A](v: A*): List[A] =
        if(v.isEmpty) Nil
        else new ::(v.head, apply(v.tail :_*))
+	   
+	   
+	     // Implicit-классы для специализированных операций
+  implicit class IntListOps(val list: List[Int]) extends AnyVal {
+    def incList: List[Int] = list.map(_ + 1)
+  }
+  
+  implicit class StringListOps(val list: List[String]) extends AnyVal {
+    def shoutString: List[String] = list.map("!" + _)
+  }
    }
 
    val l1 = List(1, 2, 3)
@@ -245,34 +269,60 @@ object hof{
       * Например, вот этот метод принимает некую последовательность аргументов с типом Int и выводит их на печать
       * def printArgs(args: Int*) = args.foreach(println(_))
       */
+		// он же уже есть в apply
+	
+	
+	
 
     /**
       *
       * Реализовать метод reverse который позволит заменить порядок элементов в списке на противоположный
       */
+	def reverse: List[A] = {
+    @tailrec
+    def loop(remaining: List[A], accum: List[A]): List[A] = remaining match {
+      case Nil => accum
+	  // у нас нет оператора +: поэтому нельзя конкатенировать списки
+      case h :: t => loop(t, h :: accum) 
+    }
+    loop(this, Nil)
+  }
+
+	  
 
     /**
       *
       * Реализовать метод map для списка который будет применять некую ф-цию к элементам данного списка
       */
-
+	def map[U](f: T => U): List[U] = this match {
+    case ::(head, tail) => f(head) :: tail.map(f)
+    case Nil => Nil
+	}
+  
 
     /**
       *
       * Реализовать метод filter для списка который будет фильтровать список по некому условию
       */
+	  def filter(p: T => Boolean): List[T] = this match {
+    case ::(head, tail) if p(head) => head :: tail.filter(p)
+    case ::(_, tail) => tail.filter(p)
+    case Nil => Nil
+  }
 
     /**
       *
       * Написать функцию incList которая будет принимать список Int и возвращать список,
       * где каждый элемент будет увеличен на 1
       */
-
+	// сделано в компаньоне
 
     /**
       *
       * Написать функцию shoutString которая будет принимать список String и возвращать список,
       * где к каждому элементу будет добавлен префикс в виде '!'
       */
+	  
+	  // сделано в компаньоне
 
  }
