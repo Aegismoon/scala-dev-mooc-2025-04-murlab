@@ -6,8 +6,7 @@ object murat_higher_kinded_types {
     def tupleF[F[_], A, B](fa: F[A], fb: F[B]): F[(A, B)]
   }
 
-
-  object Tupler {
+  object TuplerInstances {
 
     implicit val optTupler: Tupler[Option] = new Tupler[Option] {
       override def tupleF[F[_], A, B](fa: F[A], fb: F[B]): F[(A, B)] = {
@@ -17,6 +16,10 @@ object murat_higher_kinded_types {
         }
       }
     }
+  }
+
+  object Tupler {
+
 
     // суммонер
     def apply[F[_]](implicit T: Tupler[F[_]]): Tupler[F[_]] = T
