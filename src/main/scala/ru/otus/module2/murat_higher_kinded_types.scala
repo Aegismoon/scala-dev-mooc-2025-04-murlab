@@ -15,6 +15,8 @@ object murat_higher_kinded_types {
           case _ => None
         }
 
+    // в целом у всех контейнеров получается схожий подход мб тут подошел бы implicit class
+    // для тех классов которые имеют при себе flatmap и map ( Future в том числе)
     implicit val listTupler: Tupler[List] = new Tupler[List]{
       override def tupleF[A, B](fa: List[A], fb: List[B]): List[(A, B)] = {
         fa.flatMap(a => fb.map(b => (a,b)))
