@@ -27,9 +27,7 @@ object murat_higher_kinded_types {
     object Tupler {
  // суммонер
     def apply[F[_]](implicit T: Tupler[F[_]]): Tupler[F[_]] = T
-    //метод
-    def tupleF[F[_]: Tupler, A, B](fa: F[A], fb: F[B]): F[(A, B)] = Tupler[F].tupleF(fa,fb)
-
+    //метод для реализации получается не нужен - так идея подсказывает
+    // def tupleF[F[_]: Tupler, A, B](fa: F[A], fb: F[B]): F[(A, B)] = Tupler[F].tupleF(fa,fb)
   }
-
 }
