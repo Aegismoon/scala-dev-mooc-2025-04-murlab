@@ -11,10 +11,22 @@ package object catsHomework {
     extends Tree[A]
   final case class Leaf[A](value: A) extends Tree[A]
 
+
   /**
    * Напишите instance Functor для объявленного выше бинарного дерева.
    * Проверьте, что код работает корректно для Branch и Leaf
    */
+   object Tree {
+
+    implicit val treeFunctor: Functor[Tree] = new Functor[Tree] {
+      def map[A,B](fa: Tree[A])(f: A=> B):Tree[B] = this match {
+        case Branch(left,right) => Branch(map(left)(f), map(right)(f))
+        case Leaf(value) =>  Leaf(f(value))
+      }
+    }
+
+
+
 
    lazy val treeFunctor = ???
 
