@@ -217,7 +217,7 @@ object validation{
 
 object transformers {
 
-  val f1: Future[String] = Future.
+  val f1: Future[String] = ???
   def f2(str: String): Future[Option[Int]] = Future.successful(Try(str.toInt).toOption)
   def f3(i: Int): Future[Option[Int]] = Future.successful(Try(10 / i).toOption)
 
