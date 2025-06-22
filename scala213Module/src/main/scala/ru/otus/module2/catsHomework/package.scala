@@ -2,6 +2,8 @@ package ru.otus.module2
 
 import cats.Functor
 
+import scala.util.Try
+
 package object catsHomework {
 
   /**
@@ -62,14 +64,41 @@ package object catsHomework {
    * Напишите instance MonadError для Try
    */
 
-   lazy val tryME = ???
+   lazy val tryME = new MonadError[Try,Throwable] {
+
+     override def raiseError[A](e: Throwable): Try[A] = ???
+
+     override def handleErrorWith[A](fa: Try[A])(f: Throwable => Try[A]): Try[A] = ???
+
+     override def handleError[A](fa: Try[A])(f: Throwable => A): Try[A] = ???
+
+     override def ensure[A](fa: Try[A])(e: Throwable)(f: A => Boolean): Try[A] = ???
+
+     override def flatMap[A, B](fa: Try[A])(f: A => Try[B]): Try[B] = ???
+
+     override def pure[A](v: A): Try[A] = ???
+   }
 
   /**
    * Напишите instance MonadError для Either,
    * где в качестве типа ошибки будет String
    */
 
-   val eitherME = ???
+
+   val eitherME = new MonadError[Either,String] {
+
+     override def raiseError[A](e: String): Either[A] = ???
+
+     override def handleErrorWith[A](fa: Either[A])(f: String => Either[A]): Either[A] = ???
+
+     override def handleError[A](fa: Either[A])(f: String => A): Either[A] = ???
+
+     override def ensure[A](fa: Either[A])(e: String)(f: A => Boolean): Either[A] = ???
+
+     override def flatMap[A, B](fa: Either[A])(f: A => Either[B]): Either[B] = ???
+
+     override def pure[A](v: A): Either[A] = ???
+   }
 
 
 }
