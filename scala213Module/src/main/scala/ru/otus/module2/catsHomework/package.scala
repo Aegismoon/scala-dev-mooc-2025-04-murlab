@@ -89,7 +89,7 @@ package object catsHomework {
        case Success(value) => f(value)
        case Failure(error) => raiseError(error)
      }
-     override def pure[A](v: A): Try[A] = Try(v)
+     override def pure[A](v: A): Try[A] = Success(v)
    }
 
   /**
