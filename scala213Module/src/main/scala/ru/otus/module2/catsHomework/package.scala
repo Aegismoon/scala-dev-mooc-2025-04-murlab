@@ -2,7 +2,7 @@ package ru.otus.module2
 
 import cats.Functor
 
-import scala.util.Try
+import scala.util.{Failure, Success, Try}
 
 package object catsHomework {
 
@@ -66,17 +66,30 @@ package object catsHomework {
 
    lazy val tryME = new MonadError[Try,Throwable] {
 
-     override def raiseError[A](e: Throwable): Try[A] = ???
+     override def raiseError[A](e: Throwable): Try[A] = Failure(e)
 
-     override def handleErrorWith[A](fa: Try[A])(f: Throwable => Try[A]): Try[A] = ???
+     override def handleErrorWith[A](fa: Try[A])(f: Throwable => Try[A]): Try[A] = fa match {
+       case Failure(error) => f(error)
+       case _ => _
 
-     override def handleError[A](fa: Try[A])(f: Throwable => A): Try[A] = ???
+     }
 
-     override def ensure[A](fa: Try[A])(e: Throwable)(f: A => Boolean): Try[A] = ???
+     override def handleError[A](fa: Try[A])(f: Throwable => A): Try[A] = fa match {
+       case Failure(error) => pure(f(error))
+       case _ => _
+     }
 
-     override def flatMap[A, B](fa: Try[A])(f: A => Try[B]): Try[B] = ???
+     override def ensure[A](fa: Try[A])(e: Throwable)(f: A => Boolean): Try[A] = fa match {
+       case Success(value) => if(f(value)) pure(value) else raiseError(e)
+       case Failure(error) => _
 
-     override def pure[A](v: A): Try[A] = ???
+     }
+
+     override def flatMap[A, B](fa: Try[A])(f: A => Try[B]): Try[B] = fa match {
+       case Success(value) => f(value)
+       case Failure(error) => raiseError(error)
+     }
+     override def pure[A](v: A): Try[A] = Try(v)
    }
 
   /**
