@@ -80,7 +80,7 @@ package object catsHomework {
      }
 
      override def ensure[A](fa: Try[A])(e: Throwable)(f: A => Boolean): Try[A] = fa match {
-       case Success(value) => if(f(value)) pure(value) else raiseError(e)
+       case Success(value) => if(f(value)) pure(value) else Failure(e)
        case _ => fa
 
      }
@@ -96,21 +96,35 @@ package object catsHomework {
    * Напишите instance MonadError для Either,
    * где в качестве типа ошибки будет String
    */
+  type EitherString[A] = Either[String, A]
 
+   val eitherME = new MonadError[EitherString,String] {
 
-   val eitherME = new MonadError[Either,String] {
+     override def raiseError[A](e: String): EitherString[A] = Left(e)
 
-     override def raiseError[A](e: String): Either[A] = ???
+     override def handleErrorWith[A](fa: EitherString[A])(f: String => EitherString[A]): EitherString[A] = fa match {
+       case Left(error) => f(error)
+       case _ => fa
+     }
 
-     override def handleErrorWith[A](fa: Either[A])(f: String => Either[A]): Either[A] = ???
+     override def handleError[A](fa: EitherString[A])(f: String => A): EitherString[A] = fa match {
+       case Left(error) => Right(f(error))
+       case _ => fa
 
-     override def handleError[A](fa: Either[A])(f: String => A): Either[A] = ???
+     }
 
-     override def ensure[A](fa: Either[A])(e: String)(f: A => Boolean): Either[A] = ???
+     override def ensure[A](fa: EitherString[A])(e: String)(f: A => Boolean): EitherString[A] = fa match {
+       case Right(value) => if (f(value)) Right(value) else Left(e)
+       case _ => fa
+     }
 
-     override def flatMap[A, B](fa: Either[A])(f: A => Either[B]): Either[B] = ???
+     override def flatMap[A, B](fa: EitherString[A])(f: A => EitherString[B]): EitherString[B] = fa match {
+       case Left(error) => Left(error)
+       case Right(value) => f(value)
+     }
 
-     override def pure[A](v: A): Either[A] = ???
+     // вот тут не знаю как быть, чтобы не приехало исключение, потому что для своего типа не сгенерирован apply
+     override def pure[A](v: A): EitherString[A] = Right(v)
    }
 
 
