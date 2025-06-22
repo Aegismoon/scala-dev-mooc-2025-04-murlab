@@ -70,24 +70,24 @@ package object catsHomework {
 
      override def handleErrorWith[A](fa: Try[A])(f: Throwable => Try[A]): Try[A] = fa match {
        case Failure(error) => f(error)
-       case _ => _
+       case Success => fa
 
      }
 
      override def handleError[A](fa: Try[A])(f: Throwable => A): Try[A] = fa match {
-       case Failure(error) => pure(f(error))
-       case _ => _
+       case Failure(error) => Try(f(error))
+       case Success => fa
      }
 
      override def ensure[A](fa: Try[A])(e: Throwable)(f: A => Boolean): Try[A] = fa match {
        case Success(value) => if(f(value)) pure(value) else raiseError(e)
-       case Failure(error) => _
+       case Failure => fa
 
      }
 
      override def flatMap[A, B](fa: Try[A])(f: A => Try[B]): Try[B] = fa match {
        case Success(value) => f(value)
-       case Failure(error) => raiseError(error)
+       case Failure(error: Error) => Failure(error)
      }
      override def pure[A](v: A): Try[A] = Success(v)
    }
