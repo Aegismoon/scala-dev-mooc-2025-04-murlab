@@ -3,8 +3,7 @@ package ru.otus.module2
 object murscala3js {
 
     sealed trait JsValue
-
-    object JsValue {
+  
       final case class JsObject(get: Map[String, JsValue]) extends JsValue
 
       final case class JsString(get: String) extends JsValue
@@ -12,7 +11,7 @@ object murscala3js {
       final case class JsNumber(get: Double) extends JsValue
 
       final case object JsNull extends JsValue
-    }
+    
 
 
     trait JsonWriter[T] {
