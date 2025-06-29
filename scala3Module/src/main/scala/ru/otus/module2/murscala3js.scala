@@ -26,11 +26,11 @@ object murscala3js {
         override def write(v: T): JsValue = f(v)
       }
 
-      implicit val inJsonWriter = from[Int](JsNumber(_))
+      implicit val inJsonWriter: JsonWriter[Int] = from[Int](JsNumber(_))
 
-      implicit val strJsonWriter = from[String](JsString)
+      implicit val strJsonWriter: JsonWriter[String] = from[String](JsString)
 
-      implicit def optToJsValue[T](implicit ev: JsonWriter[T]) =
+      implicit def optToJsValue[T](implicit ev: JsonWriter[T]): JsonWriter[Option[T]] =
         from[Option[T]] {
           case Some(value) => ev.write(value)
           case None => JsNull
