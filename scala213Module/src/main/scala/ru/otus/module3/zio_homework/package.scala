@@ -124,7 +124,7 @@ package object zio_homework {
    * 5. Оформите ф-цию printEffectRunningTime разработанную на занятиях в отдельный сервис, так чтобы ее
    * можно было использовать аналогично zio.Console.printLine например
    */
-  // для этого пришлось пересматривать лекцию которую пропустил
+  //  в package object  config
 
    /**
      * 6.
