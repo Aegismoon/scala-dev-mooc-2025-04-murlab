@@ -45,7 +45,8 @@ package object zio_homework {
    * 
    */
 
-  def doWhile = ???
+  def doWhile[E, A](effect: IO[E, A])(stopCondition: A => Boolean): IO[E, A] =
+    effect.repeatUntilZIO(a => ZIO.succeed(!stopCondition(a)))
 
   /**
    * 3. Реализовать метод, который безопасно прочитает конфиг из переменных окружения, а в случае ошибки вернет дефолтный конфиг
