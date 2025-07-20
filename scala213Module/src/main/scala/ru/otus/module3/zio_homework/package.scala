@@ -1,6 +1,6 @@
 package ru.otus.module3
 
-import zio.{Console, Duration, IO, Random, Task, UIO, ZIO}
+import zio.{Clock, Console, Duration, IO, Random, Task, UIO, ZIO}
 
 import scala.language.postfixOps
 import ru.otus.module3.zio_homework.config._
@@ -133,13 +133,20 @@ package object zio_homework {
      * 
      */
 
-  lazy val appWithTimeLogg = ???
-
+  lazy val appWithTimeLogg = ZIO.serviceWithZIO[DurationLogger] { logger =>
+    DurationLogger.printEffectRunningTime {
+      ZIO.collectAllPar(effects).map(_.sum)
+        .flatMap(sum => printLine(s"Sum: $sum"))
+    }
+  }
   /**
     * 
     * Подготовьте его к запуску и затем запустите воспользовавшись ZioHomeWorkApp
     */
 
-  lazy val runApp = ???
+  lazy val runApp = appWithTimeLogg.provide(
+    DurationLogger.live
+  )
+
 
 }
