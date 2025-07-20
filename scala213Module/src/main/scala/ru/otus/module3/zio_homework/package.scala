@@ -3,7 +3,7 @@ package ru.otus.module3
 import zio.{Console, IO, Random, Task, UIO, ZIO}
 
 import scala.language.postfixOps
-
+import ru.otus.module3.zio_homework.config._
 
 package object zio_homework {
   /**
@@ -54,8 +54,20 @@ package object zio_homework {
    * Используйте эффект "Configuration.config" из пакета config
    */
 
+  // Дефолтная конфигурация
+  private val murdefaultConfig: AppConfig =
+    AppConfig(host = "localhost", port = "8080")
 
-  def loadConfigOrDefault = ???
+  def loadConfigOrDefault = Configuration
+    .config.tapBoth(
+      error => Console.printLine(s"Ошибка загрузки: $error"),
+      config => Console.printLine(s"Конфиг загружен: $config")
+    )
+    .catchAll { error =>
+      Console.printLine(s"Конфиг по умолчанию: $murdefaultConfig из-за ошибки: $error")
+        .orDie  // Исключение или ошибка
+        .as(murdefaultConfig)
+    }
 
 
   /**
