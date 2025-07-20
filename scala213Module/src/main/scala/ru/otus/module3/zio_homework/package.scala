@@ -1,9 +1,13 @@
 package ru.otus.module3
 
-import zio.{Console, IO, Random, Task, UIO, ZIO}
+import zio.{Console, Duration, IO, Random, Task, UIO, ZIO}
 
 import scala.language.postfixOps
 import ru.otus.module3.zio_homework.config._
+import zio.Console.printLine
+
+import scala.concurrent.duration.DurationInt
+import zioConcurrency._
 
 package object zio_homework {
   /**
@@ -81,12 +85,14 @@ package object zio_homework {
    * 4.1 Создайте эффект, который будет возвращать случайным образом выбранное число от 0 до 10 спустя 1 секунду
    * Используйте сервис zio Random
    */
-  lazy val eff = ???
+    // выбрал zipRight потому что результат не нужен
+  lazy val eff: ZIO[Any, Nothing, Int] = ZIO.sleep(Duration.fromSeconds(1)) zipRight Random.nextIntBetween(0, 11)
+
 
   /**
    * 4.2 Создайте коллукцию из 10 выше описанных эффектов (eff)
    */
-  lazy val effects = ???
+  lazy val effects = List.fill(10)(eff)
 
   
   /**
@@ -95,21 +101,30 @@ package object zio_homework {
    * можно использовать ф-цию printEffectRunningTime, которую мы разработали на занятиях
    */
 
-  lazy val app = ???
+  lazy val app =     printEffectRunningTime {
+    for {
+      // вычисление эффекта последоватнльно
+      results <- ZIO.foreach(effects)(identity)
+      sum = results.sum
+      _ <- printLine(s"Sum: $sum")
+    } yield sum
+  }
 
 
   /**
    * 4.4 Усовершенствуйте программу 4.3 так, чтобы минимизировать время ее выполнения
    */
 
-  lazy val appSpeedUp = ???
+
+  // нашел такой вариант - параллельно
+  lazy val appSpeedUp = printEffectRunningTime {ZIO.reduceAllPar(ZIO.succeed(0), effects)(_ + _) }
 
 
   /**
    * 5. Оформите ф-цию printEffectRunningTime разработанную на занятиях в отдельный сервис, так чтобы ее
    * можно было использовать аналогично zio.Console.printLine например
    */
-
+  // для этого пришлось пересматривать лекцию которую пропустил
 
    /**
      * 6.
