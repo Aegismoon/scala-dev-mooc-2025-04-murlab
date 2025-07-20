@@ -1,6 +1,9 @@
 package ru.otus.module3
 
+import zio.{Console, IO, Random, Task, UIO, ZIO}
+
 import scala.language.postfixOps
+
 
 package object zio_homework {
   /**
@@ -9,9 +12,33 @@ package object zio_homework {
    * и печатать в консоль угадал или нет. Подумайте, на какие наиболее простые эффекты ее можно декомпозировать.
    */
 
+  // эффект-рандом
+  val generateRandomNumber: UIO[Int] =
+    Random.nextIntBetween(1, 4)
+
+  // эффект с консоли
+  val readUserGuess: Task[Int] =
+    Console.readLine("Угадайте число от 1 до 3: ").flatMap { input =>
+      ZIO.attempt(input.toInt).catchSome {
+        // если нет числа, то переспросить про число
+        case _: NumberFormatException =>
+          Console.printLine("Ошибка: Введите число!").zipRight(readUserGuess)
+      }
+    }
 
 
-  lazy val guessProgram = ???
+  // Эффект проверки совпадения
+  def checkGuess(target: Int, guess: Int): Task[Unit] =
+    if (guess equals target)
+      Console.printLine(s"Угаданно! Загаданное число: $target")
+  else
+  Console.printLine(s"Неудача. Загаданное число: $target")
+
+  lazy val guessProgram: Task[Unit] =  for {
+    target <- generateRandomNumber
+    guess  <- readUserGuess
+    _      <- checkGuess(target, guess)
+  } yield ()
 
   /**
    * 2. реализовать функцию doWhile (общего назначения), которая будет выполнять эффект до тех пор, пока его значение в условии не даст true
