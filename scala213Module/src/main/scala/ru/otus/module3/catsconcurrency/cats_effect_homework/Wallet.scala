@@ -25,7 +25,7 @@ trait Wallet[F[_]] {
 // - java.nio.file.Files.exists
 // - java.nio.file.Paths.get
 final class FileWallet[F[_]: Sync](id: WalletId) extends Wallet[F] {
-  def balance: F[BigDecimal] = ???
+  def balance: F[BigDecimal] =
   def topup(amount: BigDecimal): F[Unit] = ???
   def withdraw(amount: BigDecimal): F[Either[WalletError, Unit]] = ???
 }
@@ -38,8 +38,7 @@ object Wallet {
   // вызывается она так: Sync[F].delay(...)
   // Тайпкласс Sync из cats-effect описывает возможность заворачивания сайд-эффектов
   def fileWallet[F[_]: Sync](id: WalletId): F[Wallet[F]] = for{
-
-    wallet <- IO.print(s"Make a new fileWallet id ${id}") *> Sync[F].delay{new FileWallet[F](id) }
+    wallet <- Sync[F].delay{print(s"Make a new fileWallet id ${id}")} *> Sync[F].delay{new FileWallet[F](id) }
   } yield wallet
 
   type WalletId = String
