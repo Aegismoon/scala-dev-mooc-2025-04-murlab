@@ -65,7 +65,7 @@ object Wallet {
   // вызывается она так: Sync[F].delay(...)
   // Тайпкласс Sync из cats-effect описывает возможность заворачивания сайд-эффектов
   def fileWallet[F[_]: Sync](id: WalletId): F[Wallet[F]] = for{
-    wallet <- Sync[F].delay{print(s"Make a new fileWallet id ${id}")} *> Sync[F].delay{ initFileSystem(id).as(new FileWallet[F](id)) }
+    wallet <- Sync[F].delay{print(s"Make a new fileWallet id ${id}")} *> initFileSystem(id).as(new FileWallet[F](id))
   } yield wallet
 
   // инициация папки с кощельками
