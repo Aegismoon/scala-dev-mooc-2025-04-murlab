@@ -7,6 +7,8 @@ import cats.implicits._
 import catsconcurrency.cats_effect_homework.Wallet.{BalanceTooLow, WalletError}
 import Wallet.{BalanceTooLow, WalletError}
 
+import scala.Left
+
 // Здесь мы хотим протестировать бизнес-логику использующую кошельки: функцию transfer.
 // Однако мы не хотим в наших тестах создавать какие-то файлы: в реальном приложении такой тест будет нуждаться в базе данных,
 // что очень неудобно, ведь мы тестируем не сами кошельки а функцию transfer.
@@ -29,10 +31,18 @@ object WalletTransferApp extends IOApp.Simple {
 
   // todo: реализовать интерпретатор (не забывая про ошибку списания при недостаточных средствах)
   final class InMemWallet[F[_]](ref: Ref[F, BigDecimal]) extends Wallet[F] {
-    def balance: F[BigDecimal] = ???
-    def topup(amount: BigDecimal): F[Unit] = ???
-    def withdraw(amount: BigDecimal): F[Either[WalletError, Unit]] = ???
+    def balance: F[BigDecimal] = ref.get
+    def topup(amount: BigDecimal): F[Unit] = ref.update(_ + amount)
+    def withdraw(amount: BigDecimal): F[Either[WalletError, Unit]] =
+      ref.modify { currentBalance =>
+        if (amount > currentBalance) {
+          (currentBalance, Left(BalanceTooLow))
+        } else {
+          (currentBalance - amount, Right(()))
+        }
+      }
   }
+
 
   // todo: реализовать конструктор. Снова хитрая сигнатура, потому что создание Ref - это побочный эффект
   def wallet(balance: BigDecimal): IO[Wallet[IO]] = {
