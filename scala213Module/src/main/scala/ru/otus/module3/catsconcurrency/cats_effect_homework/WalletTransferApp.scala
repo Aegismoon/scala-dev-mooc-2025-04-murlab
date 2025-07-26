@@ -35,7 +35,14 @@ object WalletTransferApp extends IOApp.Simple {
   }
 
   // todo: реализовать конструктор. Снова хитрая сигнатура, потому что создание Ref - это побочный эффект
-  def wallet(balance: BigDecimal): IO[Wallet[IO]] = ???
+  def wallet(balance: BigDecimal): IO[Wallet[IO]] = {
+    for{
+      refBalance <- Ref.of[IO, BigDecimal](balance)
+      wallet <- IO.delay(println(s"Build inMemoryWallet, balance ${refBalance.get}")) *> IO.delay{ new InMemWallet[IO](refBalance) }
+    } yield wallet
+  }
+
+
 
   // а это тест, который выполняет перевод с одного кошелька на другой и выводит балансы после операции. Тоже менять не нужно
   def testTransfer: IO[(BigDecimal, BigDecimal)] =
