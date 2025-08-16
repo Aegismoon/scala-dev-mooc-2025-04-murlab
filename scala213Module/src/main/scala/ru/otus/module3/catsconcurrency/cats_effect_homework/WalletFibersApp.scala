@@ -43,8 +43,7 @@ object WalletFibersApp extends IOApp.Simple {
       _ <- fiber1.cancel
       _ <- fiber2.cancel
       _ <- fiber3.cancel
-
-
+      _ <- fiber4.cancel
     } yield ()
 
 }
