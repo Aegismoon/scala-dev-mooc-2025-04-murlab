@@ -1,7 +1,10 @@
 package catsconcurrency.cats_effect_homework
 
+
 import cats.effect.{IO, IOApp}
 import cats.implicits._
+
+import scala.concurrent.duration.DurationInt
 
 // Поиграемся с кошельками на файлах и файберами.
 
@@ -18,6 +21,13 @@ import cats.implicits._
 // def loop(): IO[Unit] = IO.println("hello").flatMap(_ => loop())
 object WalletFibersApp extends IOApp.Simple {
 
+  def printBalance(wallet1:Wallet[IO],wallet2:Wallet[IO], wallet3:Wallet[IO]) ={
+      wallet1.balance.map(v=> s"wallet 1 balance:${v}").flatMap(IO.println) *>
+      wallet2.balance.map(v=> s"wallet 2 balance:${v}").flatMap(IO.println) *>
+      wallet3.balance.map(v=> s"wallet 3 balance:${v}").flatMap(IO.println)
+  }
+
+
   def run: IO[Unit] =
     for {
       _ <- IO.println("Press any key to stop...")
@@ -25,6 +35,16 @@ object WalletFibersApp extends IOApp.Simple {
       wallet2 <- Wallet.fileWallet[IO]("2")
       wallet3 <- Wallet.fileWallet[IO]("3")
       // todo: запустить все файберы и ждать ввода от пользователя чтобы завершить работу
+      fiber1 <- (IO.sleep(100.millis) *> wallet1.topup(100)).iterateWhile(_ => true).start
+      fiber2 <- (IO.sleep(500.millis) *> wallet2.topup(100)).iterateWhile(_ => true).start
+      fiber3 <- (IO.sleep(2000.millis) *> wallet3.topup(100)).iterateWhile(_ => true).start
+      fiber4 <- (IO.sleep(1000.millis) *> printBalance(wallet1,wallet2,wallet3)).iterateWhile(_ => true).start
+      _ <- IO.readLine
+      _ <- fiber1.cancel
+      _ <- fiber2.cancel
+      _ <- fiber3.cancel
+
+
     } yield ()
 
 }
