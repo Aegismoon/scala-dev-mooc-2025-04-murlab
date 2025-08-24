@@ -1,18 +1,21 @@
 package catshttp4s
 
 import cats.effect.unsafe.implicits.global
-import cats.effect.{IO, IOApp, Ref}
+import cats.effect.{IO, IOApp, Ref, Resource}
 import cats.implicits.toSemigroupKOps
 import com.comcast.ip4s.{Host, Port}
 import fs2.Stream
 import fs2.io.file.{Files, Path}
 import io.circe.Json
+import org.http4s.FormDataDecoder.formEntityDecoder
 import org.http4s.circe.jsonEncoder
+import org.http4s.client.Client
 import org.http4s.dsl.io._
+import org.http4s.ember.client.EmberClientBuilder
 import org.http4s.ember.server.EmberServerBuilder
 import org.http4s.headers.`Content-Type`
 import org.http4s.server.Router
-import org.http4s.{Http, HttpApp, HttpRoutes, MediaType}
+import org.http4s.{Http, HttpApp, HttpRoutes, MediaType, Method, Request, Response, Uri}
 import org.scalatest.time.SpanSugar.convertIntToGrainOfTime
 
 object GlobalState {
@@ -71,6 +74,76 @@ object mainServer extends IOApp.Simple {
       Restfull.server1.use(_ => IO.never)
   }
 }
+
+object HttpClientLaunchTest extends IOApp.Simple {
+  val builder: Resource[IO, Client[IO]] =
+    EmberClientBuilder.default[IO].build
+
+  private val request = Request[IO](
+    method = Method.GET,
+    uri    = Uri.unsafeFromString("http://localhost:8070/slow/4/12/0")
+  )
+
+  val result: Resource[IO, Response[IO]] = for {
+    client   <- builder
+    response <- client.run(request)
+  } yield response
+
+  val result1: Resource[IO, String] = for {
+    client   <- builder
+    strBody  <- Resource.eval(client.expect[String](request))
+  } yield strBody
+
+  val result3: IO[String] =
+    builder.use(client =>
+      client.run(request).use { resp =>
+        if (resp.status.isSuccess)
+          resp.body.compile.to(Array).map(a => s"bytes:${a.length}")
+        else
+          IO.pure("error")
+      }
+    )
+
+  private val request2 = Request[IO](
+    method = Method.GET,
+    uri    = Uri.unsafeFromString("http://localhost:8070/counter")
+  )
+
+
+  val result2: Resource[IO, Response[IO]] = for {
+    client   <- builder
+    response <- client.run(request)
+  } yield response
+
+  val result21: Resource[IO, String] = for {
+    client <- builder
+    json   <- Resource.eval(client.expect[Json](request))
+  } yield json.asString.getOrElse("")
+
+
+  val result23: IO[String] =
+    builder.use { client =>
+      client.run(request).use { resp =>
+        if (resp.status.isSuccess)
+          resp.as[Json].map(_.asString.getOrElse(""))
+        else
+          IO.pure("error")
+      }
+    }
+
+  // -------- main --------
+  def run: IO[Unit] = for {
+    _ <- result.use(r => IO.println(s"/slow result status=${r.status}"))
+    _ <- result1.use(b => IO.println(s"/slow result1 body=${b.take(40)}..."))
+    _ <- result3.flatMap(r => IO.println(s"/slow result3 = $r"))
+
+    _ <- result2.use(r => IO.println(s"/counter result status=${r.status}"))
+    _ <- result21.use(b => IO.println(s"/counter result21 body=$b"))
+    _ <- result23.flatMap(r => IO.println(s"/counter result23 = $r"))
+  } yield ()
+}
+
+
 
 //2
 object RestFull2EndPoints {
