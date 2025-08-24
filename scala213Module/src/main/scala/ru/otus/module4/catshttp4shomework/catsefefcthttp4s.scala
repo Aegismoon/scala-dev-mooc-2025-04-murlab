@@ -7,6 +7,7 @@ import com.comcast.ip4s.{Host, Port}
 import fs2.Stream
 import fs2.io.file.{Files, Path}
 import io.circe.Json
+import org.http4s.circe._
 import org.http4s.FormDataDecoder.formEntityDecoder
 import org.http4s.circe.jsonEncoder
 import org.http4s.client.Client
