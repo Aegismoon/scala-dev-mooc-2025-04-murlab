@@ -11,6 +11,7 @@ import org.http4s.dsl.io._
 import org.http4s.ember.server.EmberServerBuilder
 import org.http4s.server.Router
 import org.http4s.{Http, HttpRoutes}
+import org.scalatest.time.SpanSugar.convertIntToGrainOfTime
 
 object GlobalState {
 
@@ -29,12 +30,15 @@ object Restfull {
 
   def streamChonker: HttpRoutes[IO] = HttpRoutes.of[IO] {
     case GET -> Root / "slow" / chunk / total / time =>
+      val chunkSize = chunk.toInt
+      val totalSize = total.toLong
+      val delay     = time.toInt.millis
       val byteStream =
         Files[IO].readAll(Path("data.txt"))
-          .chunks                     // Stream[IO, Chunk[Byte]]
-          .flatMap(Stream.chunk)      // Stream[IO, Byte] (отдельные байты)
-          .throttle
-          .take(total)
+          .metered(delay)
+          .take(totalSize)
+          .chunkN(chunkSize)
+          .flatMap(Stream.chunk)
       Ok(byteStream)    //.map(_.withContentType(`Content-Type`(MediaType.application.`octet-stream`)))
   }
 
