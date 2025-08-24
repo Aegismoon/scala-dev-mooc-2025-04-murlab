@@ -2,6 +2,7 @@ package catshttp4s
 
 import cats.effect.unsafe.implicits.global
 import cats.effect.{IO, IOApp, Ref}
+import cats.implicits.toSemigroupKOps
 import com.comcast.ip4s.{Host, Port}
 import fs2.Stream
 import fs2.io.file.{Files, Path}
@@ -9,8 +10,9 @@ import io.circe.Json
 import org.http4s.circe.jsonEncoder
 import org.http4s.dsl.io._
 import org.http4s.ember.server.EmberServerBuilder
+import org.http4s.headers.`Content-Type`
 import org.http4s.server.Router
-import org.http4s.{Http, HttpRoutes}
+import org.http4s.{Http, HttpApp, HttpRoutes, MediaType}
 import org.scalatest.time.SpanSugar.convertIntToGrainOfTime
 
 object GlobalState {
@@ -39,7 +41,7 @@ object Restfull {
           .take(totalSize)
           .chunkN(chunkSize)
           .flatMap(Stream.chunk)
-      Ok(byteStream)    //.map(_.withContentType(`Content-Type`(MediaType.application.`octet-stream`)))
+      Ok(byteStream,`Content-Type`(MediaType.application.`octet-stream`))
   }
 
   def serviceCounter: HttpRoutes[IO] = HttpRoutes.of{
@@ -49,14 +51,18 @@ object Restfull {
     } yield response
   }
 
-  val httpApp: Http[IO, IO] = serviceCounter.orNotFound
+  val routes: HttpRoutes[IO] =
+    serviceCounter <+> streamChonker
+
+  val httpCombinedApp: HttpApp[IO] =
+    routes.orNotFound
 
   val server1 = for {
     s <- EmberServerBuilder
       .default[IO]
       .withPort(Port.fromInt(8070).get)
       .withHost(Host.fromString("localhost").get)
-      .withHttpApp(httpApp).build
+      .withHttpApp(httpCombinedApp).build
   } yield s
 }
 
