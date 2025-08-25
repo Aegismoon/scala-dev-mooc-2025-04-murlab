@@ -64,7 +64,7 @@ class UserRepositoryImpl extends UserRepository {
         dc.run( for{
             userRoleFact <- userRoleSchema.filter(_.userId == lift(userId.id))
             roleDim <- roleSchema.filter(_.code == userRoleFact.roleId)
-        } yield roleDim)
+        } yield roleDim).map(_.distinct)
 
     override def insertRoleToUser(roleCode: RoleCode, userId: UserId): QIO[Unit] =
         dc.run(userRoleSchema.insertValue(lift(UserToRole(roleCode.code,userId.id))))
