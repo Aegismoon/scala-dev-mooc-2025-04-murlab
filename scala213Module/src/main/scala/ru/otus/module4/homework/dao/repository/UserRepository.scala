@@ -72,7 +72,7 @@ class UserRepositoryImpl extends UserRepository {
     override def listUsersWithRole(roleCode: RoleCode): QIO[List[User]] =
         dc.run(      for{
             userRoleFact <- userRoleSchema.filter(_.roleId == lift(roleCode.code))
-            userDim <- userSchema.join(_.id == userRoleFact.userId)
+            userDim <- userSchema.filter(_.id == userRoleFact.userId)
         } yield userDim)
 
     override def findRoleByCode(roleCode: RoleCode): QIO[Option[Role]] =
