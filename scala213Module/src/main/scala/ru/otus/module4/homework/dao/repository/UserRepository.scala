@@ -40,10 +40,10 @@ class UserRepositoryImpl extends UserRepository {
     }
 
     override def findUser(userId: UserId): QIO[Option[User]] =
-        dc.run(userSchema.filter(_.id == lift(userId.id)))
+        dc.run(userSchema.filter(_.id == lift(userId.id)).take(1)).map(_.headOption)
 
     override def createUser(user: User): QIO[User] =
-        dc.run(userSchema.insertValue(lift(user)))
+        dc.run(userSchema.insertValue(lift(user)).returningGenerated(_.id))
 
     override def createUsers(users: List[User]): QIO[List[User]] =
         dc.run(liftQuery(users).foreach(user => userSchema.insertValue(user)))
