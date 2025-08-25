@@ -14,7 +14,7 @@ trait UserService{
 }
 class Impl(userRepo: UserRepository) extends UserService {
     val dc = db.Ctx
-
+    import dc._
     def listUsers(): QIO[List[User]] =
         userRepo.list()
 
@@ -26,13 +26,21 @@ class Impl(userRepo: UserRepository) extends UserService {
          } yield userDTOs
 
     def addUserWithRole(user: User, roleCode: RoleCode): QIO[UserDTO] =
-        for{
-         _ <-  userRepo.insertRoleToUser(roleCode = roleCode, userId = user.typedId)
-         roles  <- userRepo.userRoles(user.typedId)
-        } yield UserDTO(user, roles.toSet)
+            for {
+                _     <- userRepo.createUser(user)
+                _     <- userRepo.insertRoleToUser(roleCode = roleCode, userId = user.typedId)
+                roles <- userRepo.userRoles(user.typedId)
+            } yield UserDTO(user, roles.toSet)
+
 
     def listUsersWithRole(roleCode: RoleCode): QIO[List[UserDTO]] =
-        userRepo.listUsersWithRole(roleCode).map(_.map(u=> UserDTO(u,Set(roleCode))))
+        for {
+            users <- userRepo.listUsersWithRole(roleCode)
+            dtos  <- ZIO.foreach(users) { u =>
+                userRepo.userRoles(u.typedId)
+                  .map(rs => UserDTO(u, rs.toSet))
+            }
+        } yield dtos
 
 }
 object UserService{
