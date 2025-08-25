@@ -25,13 +25,17 @@ class Impl(userRepo: UserRepository) extends UserService {
          userDTOs <-  ZIO.foreach(users) { u=> userRepo.userRoles(u.typedId).map(rs => UserDTO(u, rs.toSet))}
          } yield userDTOs
 
-    def addUserWithRole(user: User, roleCode: RoleCode): QIO[UserDTO] =
+
+
+    def addUserWithRole(user: User, roleCode: RoleCode): QIO[UserDTO] = {
+        dc.transaction {
             for {
-                _     <- userRepo.createUser(user)
-                _     <- userRepo.insertRoleToUser(roleCode = roleCode, userId = user.typedId)
+                _ <- userRepo.createUser(user)
+                _ <- userRepo.insertRoleToUser(roleCode = roleCode, userId = user.typedId)
                 roles <- userRepo.userRoles(user.typedId)
             } yield UserDTO(user, roles.toSet)
-
+        }
+    }
 
     def listUsersWithRole(roleCode: RoleCode): QIO[List[UserDTO]] =
         for {
