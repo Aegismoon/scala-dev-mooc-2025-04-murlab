@@ -4,7 +4,7 @@ import io.getquill.context.ZioJdbc.QIO
 import ru.otus.module4.homework.dao.entity.{Role, RoleCode, User}
 import ru.otus.module4.homework.dao.repository.UserRepository
 import ru.otus.module4.phoneBook.db
-import zio.ZLayer
+import zio.{ZIO, ZLayer}
 
 trait UserService{
     def listUsers(): QIO[List[User]]
@@ -29,7 +29,12 @@ class Impl(userRepo: UserRepository) extends UserService {
 }
 object UserService{
 
-    val layer: ZLayer[UserRepository, Nothing, UserService] = ???
+    val layer: ZLayer[UserRepository, Nothing, UserService] =
+        ZLayer(
+            for {
+                userServiceRepo <- ZIO.service[UserRepository]
+            } yield new Impl(userServiceRepo)
+        )
 }
 
 case class UserDTO(user: User, roles: Set[Role])
