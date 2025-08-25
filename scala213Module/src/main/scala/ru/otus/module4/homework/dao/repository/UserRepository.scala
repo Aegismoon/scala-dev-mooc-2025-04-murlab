@@ -43,16 +43,16 @@ class UserRepositoryImpl extends UserRepository {
         dc.run(userSchema.filter(_.id == lift(userId.id)).take(1)).map(_.headOption)
 
     override def createUser(user: User): QIO[User] =
-        dc.run(userSchema.insertValue(lift(user)).returningGenerated(_.id))
+        dc.run(userSchema.insertValue(lift(user)).returning(u => u))
 
     override def createUsers(users: List[User]): QIO[List[User]] =
-        dc.run(liftQuery(users).foreach(user => userSchema.insertValue(user)))
+        dc.run(liftQuery(users).foreach(user => userSchema.insertValue(user).returning(u => u)))
 
     override def updateUser(user: User): QIO[Unit] =
-        dc.run(userSchema.updateValue(lift(user)))
+        dc.run(userSchema.filter(_.id == lift(user.id)).updateValue(lift(user))).unit
 
     override def deleteUser(user: User): QIO[Unit] =
-        dc.run(userSchema.filter(_.id == lift(user.id)).delete)
+        dc.run(userSchema.filter(_.id == lift(user.id)).delete).unit
 
     override def findByLastName(lastName: String): QIO[List[User]] =
         dc.run(userSchema.filter(_.lastName == lift(lastName)))
@@ -67,7 +67,7 @@ class UserRepositoryImpl extends UserRepository {
         } yield roleDim).map(_.distinct)
 
     override def insertRoleToUser(roleCode: RoleCode, userId: UserId): QIO[Unit] =
-        dc.run(userRoleSchema.insertValue(lift(UserToRole(roleCode.code,userId.id))))
+        dc.run(userRoleSchema.insertValue(lift(UserToRole(roleCode.code,userId.id)))).unit
 
     override def listUsersWithRole(roleCode: RoleCode): QIO[List[User]] =
         dc.run(      for{
@@ -76,7 +76,7 @@ class UserRepositoryImpl extends UserRepository {
         } yield userDim)
 
     override def findRoleByCode(roleCode: RoleCode): QIO[Option[Role]] =
-        dc.run(roleSchema.filter(_.code == lift(roleCode.code)))
+        dc.run(roleSchema.filter(_.code == lift(roleCode.code))).map(_.headOption)
 }
 
 object UserRepository{
