@@ -6,6 +6,8 @@ import ru.otus.module4.homework.dao.repository.UserRepository
 import ru.otus.module4.phoneBook.db
 import zio.{ZIO, ZLayer}
 
+import java.sql.SQLException
+
 trait UserService{
     def listUsers(): QIO[List[User]]
     def listUsersDTO(): QIO[List[UserDTO]]
@@ -28,13 +30,13 @@ class Impl(userRepo: UserRepository) extends UserService {
 
 
     def addUserWithRole(user: User, roleCode: RoleCode): QIO[UserDTO] = {
-        dc.transaction {
+        transaction {
             for {
                 _ <- userRepo.createUser(user)
                 _ <- userRepo.insertRoleToUser(roleCode = roleCode, userId = user.typedId)
                 roles <- userRepo.userRoles(user.typedId)
             } yield UserDTO(user, roles.toSet)
-        }
+        }.refineToOrDie[SQLException]
     }
 
     def listUsersWithRole(roleCode: RoleCode): QIO[List[UserDTO]] =
