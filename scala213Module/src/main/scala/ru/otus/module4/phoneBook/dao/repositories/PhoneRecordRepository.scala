@@ -44,8 +44,8 @@ class Impl extends PhoneRecordRepository{
 
     //  UPDATE PhoneRecord AS x4 SET "id" = phr.id, "phone" = phr.phone, "fio" = phr.fio, "addressId" = phr.addressId FROM (VALUES (?, ?, ?, ?)) 
     // AS phr(id, phone, fio, addressId) WHERE x4."id" = ?
-    def update(phoneRecords: List[PhoneRecord]): QIO[Unit] = ctx.run(liftQuery(phoneRecords).foreach{phr => 
-      phoneRecordSchema.filter(_.id == lift(phr.id)).updateValue(phr)}).unit
+  /*  def update(phoneRecords: List[PhoneRecord]): QIO[Unit] = ctx.run(liftQuery(phoneRecords).foreach{phr =>
+      phoneRecordSchema.filter(_.id == lift(phr.id)).updateValue(phr)}).unit */
 
     // DELETE FROM PhoneRecord AS x4 WHERE x4."id" = ?
     def delete(id: String): QIO[Unit] = ctx.run(phoneRecordSchema.filter(_.id == lift(id)).delete).unit
